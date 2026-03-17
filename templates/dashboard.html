@@ -51,7 +51,7 @@
         .toast-error { background: #991b1b; color: #ffffff; }
         th { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
         tr:hover td { background: #f8fafc; }
-        .summary-cell { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .summary-cell { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; max-width: 100%; }
         #summaryModal { display: none; }
         #summaryModal.open { display: flex; }
     </style>
@@ -180,24 +180,24 @@
             </div>
 
             <!-- Table body -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-slate-700">
+            <div>
+                <table class="w-full text-sm text-slate-700 table-fixed">
                     <thead>
                         <tr class="border-b border-slate-100">
-                            <th class="px-4 py-3 text-left">Name</th>
-                            <th class="px-4 py-3 text-left">Company</th>
-                            <th class="px-4 py-3 text-left">Phone</th>
-                            <th class="px-4 py-3 text-left">Country</th>
-                            <th class="px-4 py-3 text-left">Status</th>
-                            <th class="px-4 py-3 text-left">Qualified</th>
-                            <th class="px-4 py-3 text-left">Meeting</th>
+                            <th class="px-4 py-3 text-left w-28">Name</th>
+                            <th class="px-4 py-3 text-left w-28">Company</th>
+                            <th class="px-4 py-3 text-left w-28">Phone</th>
+                            <th class="px-4 py-3 text-left w-20">Country</th>
+                            <th class="px-4 py-3 text-left w-24">Status</th>
+                            <th class="px-4 py-3 text-left w-20">Qualified</th>
+                            <th class="px-4 py-3 text-left w-24">Meeting</th>
                             <th class="px-4 py-3 text-left">Attempt</th>
-                            <th class="px-4 py-3 text-left">Duration</th>
+                            <th class="px-4 py-3 text-left w-16">Duration</th>
                             <th class="px-4 py-3 text-left">Summary</th>
-                            <th class="px-4 py-3 text-left">Call</th>
-                            <th class="px-4 py-3 text-left">Date</th>
+                            <th class="px-4 py-3 text-left w-12">Call</th>
+                            <th class="px-4 py-3 text-left w-32">Date</th>
                             {% if role == "admin" %}
-                            <th class="px-4 py-3 text-left">Actions</th>
+                            <th class="px-4 py-3 text-left w-16">Actions</th>
                             {% endif %}
                         </tr>
                     </thead>
@@ -307,94 +307,28 @@
                     <button onclick="resetMonitor()" class="text-sm text-blue-600 hover:text-blue-800 transition ml-auto">Reset</button>
                 </div>
 
-                <!-- Monitor table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-slate-700">
-                        <thead>
-                            <tr class="border-b border-slate-100">
-                                <th class="px-4 py-3 text-left">Name</th>
-                                <th class="px-4 py-3 text-left">Company</th>
-                                <th class="px-4 py-3 text-left">Phone</th>
-                                <th class="px-4 py-3 text-left">Country</th>
-                                <th class="px-4 py-3 text-left">Status</th>
-                                <th class="px-4 py-3 text-left">Qualified</th>
-                                <th class="px-4 py-3 text-left">Attempt</th>
-                                <th class="px-4 py-3 text-left">Duration</th>
-                                <th class="px-4 py-3 text-left">Date</th>
-                                <th class="px-4 py-3 text-left">Recording</th>
-                            </tr>
-                        </thead>
-                        <tbody id="monitorTableBody">
-                            {% for call in calls %}
-                            <tr class="border-b border-slate-50 monitor-row"
-                                data-name="{{ (call.name or '').lower() }}"
-                                data-company="{{ (call.company or '').lower() }}"
-                                data-phone="{{ (call.phone or '').lower() }}"
-                                data-status="{{ call.status or '' }}">
-                                <td class="px-4 py-3 font-medium text-slate-800">{{ call.name or '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ call.company or '—' }}</td>
-                                <td class="px-4 py-3 font-mono text-xs">{{ call.phone or '—' }}</td>
-                                <td class="px-4 py-3">{{ call.country or '—' }}</td>
-                                <td class="px-4 py-3">
-                                    {% set s = (call.status or '').lower() %}
-                                    {% if s == 'voicemail' %}
-                                        <span class="status-badge status-voicemail">{{ call.status }}</span>
-                                    {% elif s == 'completed' %}
-                                        <span class="status-badge status-completed">{{ call.status }}</span>
-                                    {% else %}
-                                        <span class="status-badge status-default">{{ call.status or '—' }}</span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-4 py-3">
-                                    {% if call.qualified == 'Yes' %}
-                                        <span class="status-badge status-qualified-yes">Yes</span>
-                                    {% elif call.qualified == 'No' %}
-                                        <span class="status-badge status-qualified-no">No</span>
-                                    {% else %}
-                                        <span class="text-slate-400">—</span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-4 py-3 text-center">{{ call.attempt or '—' }}</td>
-                                <td class="px-4 py-3 text-center">
-                                    {% if call.duration and call.duration != '0' %}
-                                        {{ call.duration }}s
-                                    {% else %}
-                                        <span class="text-slate-400">—</span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
-                                    {% if call.created_at %}
-                                        {{ call.created_at.strftime('%Y-%m-%d %H:%M') }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-                                <td class="px-4 py-3">
-                                    {% if call.call_url %}
-                                        <a href="{{ call.call_url }}" target="_blank"
-                                           class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
-                                            <i data-lucide="play" class="w-3 h-3"></i>
-                                            View
-                                        </a>
-                                    {% else %}
-                                        <span class="text-slate-300 text-xs">No recording</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="10" class="px-4 py-12 text-center text-slate-400">
-                                    No calls recorded yet.
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                <!-- Monitor grouped list -->
+                <div id="monitorList" class="divide-y divide-slate-100"></div>
 
                 <div class="px-4 py-3 text-xs text-slate-400 border-t border-slate-100">
-                    Showing <span id="monitorVisibleCount">{{ calls | length }}</span> of {{ calls | length }} records
+                    <span id="monitorVisibleCount">0</span> clients · <span id="monitorTotalCalls">0</span> calls
                 </div>
+
+                <!-- Embed calls as JSON for JS grouping -->
+                <script id="monitorData" type="application/json">
+                [{% for call in calls %}{
+                    "name": {{ (call.name or '') | tojson }},
+                    "company": {{ (call.company or '') | tojson }},
+                    "phone": {{ (call.phone or '') | tojson }},
+                    "country": {{ (call.country or '') | tojson }},
+                    "status": {{ (call.status or '') | tojson }},
+                    "qualified": {{ (call.qualified or '') | tojson }},
+                    "attempt": {{ (call.attempt or '') | tojson }},
+                    "duration": {{ (call.duration or '') | tojson }},
+                    "call_url": {{ (call.call_url or '') | tojson }},
+                    "created_at": {{ (call.created_at.strftime('%Y-%m-%d %H:%M') if call.created_at else '') | tojson }}
+                }{% if not loop.last %},{% endif %}{% endfor %}]
+                </script>
             </div>
 
         </div><!-- end pane-monitor -->
@@ -581,32 +515,133 @@
             lucide.createIcons();
         }
 
+        // ---- Monitor Grouped Render ----
+        let allMonitorCalls = [];
+
+        function statusBadge(status) {
+            const s = (status || '').toLowerCase();
+            let cls = 'status-default';
+            if (s === 'voicemail') cls = 'status-voicemail';
+            else if (s === 'completed') cls = 'status-completed';
+            return status ? `<span class="status-badge ${cls}">${status}</span>` : '<span class="text-slate-400">—</span>';
+        }
+
+        function qualifiedBadge(q) {
+            if (q === 'Yes') return '<span class="status-badge status-qualified-yes">Yes</span>';
+            if (q === 'No') return '<span class="status-badge status-qualified-no">No</span>';
+            return '<span class="text-slate-400">—</span>';
+        }
+
+        function renderMonitor(calls) {
+            const list = document.getElementById('monitorList');
+            if (!calls.length) {
+                list.innerHTML = '<div class="px-4 py-12 text-center text-slate-400">No calls recorded yet.</div>';
+                document.getElementById('monitorVisibleCount').textContent = 0;
+                document.getElementById('monitorTotalCalls').textContent = 0;
+                return;
+            }
+
+            // Group by name+phone
+            const groups = {};
+            calls.forEach(c => {
+                const key = (c.name || '—') + '||' + (c.phone || '');
+                if (!groups[key]) groups[key] = { name: c.name, company: c.company, phone: c.phone, country: c.country, calls: [] };
+                groups[key].calls.push(c);
+            });
+
+            let html = '';
+            Object.values(groups).forEach((g, gi) => {
+                const latest = g.calls[0];
+                const count = g.calls.length;
+                html += `
+                <div class="monitor-group" data-group="${gi}">
+                    <!-- Group header -->
+                    <div class="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-slate-50 transition select-none"
+                         onclick="toggleGroup(${gi})">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 transition-transform group-chevron" id="chevron-${gi}"></i>
+                        <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
+                            <div>
+                                <div class="font-semibold text-slate-800 text-sm">${g.name || '—'}</div>
+                                <div class="text-xs text-slate-500">${g.company || '—'}</div>
+                            </div>
+                            <div class="font-mono text-xs text-slate-600">${g.phone || '—'}</div>
+                            <div class="text-xs text-slate-500">${g.country || '—'}</div>
+                            <div class="flex items-center gap-2">
+                                ${statusBadge(latest.status)}
+                                <span class="text-xs text-slate-400">${count} call${count > 1 ? 's' : ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Child rows -->
+                    <div id="group-rows-${gi}" class="hidden bg-slate-50 border-t border-slate-100">
+                        <table class="w-full text-sm text-slate-700">
+                            <thead>
+                                <tr class="border-b border-slate-200">
+                                    <th class="pl-12 pr-4 py-2 text-left">Status</th>
+                                    <th class="px-4 py-2 text-left">Qualified</th>
+                                    <th class="px-4 py-2 text-left">Attempt</th>
+                                    <th class="px-4 py-2 text-left">Duration</th>
+                                    <th class="px-4 py-2 text-left">Date</th>
+                                    <th class="px-4 py-2 text-left">Recording</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${g.calls.map(c => `
+                                <tr class="border-b border-slate-100 last:border-0">
+                                    <td class="pl-12 pr-4 py-2">${statusBadge(c.status)}</td>
+                                    <td class="px-4 py-2">${qualifiedBadge(c.qualified)}</td>
+                                    <td class="px-4 py-2 text-center">${c.attempt || '—'}</td>
+                                    <td class="px-4 py-2 text-center">${c.duration && c.duration !== '0' ? c.duration + 's' : '<span class="text-slate-400">—</span>'}</td>
+                                    <td class="px-4 py-2 text-xs text-slate-500 whitespace-nowrap">${c.created_at || '—'}</td>
+                                    <td class="px-4 py-2">${c.call_url
+                                        ? `<a href="${c.call_url}" target="_blank" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"><svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> View</a>`
+                                        : '<span class="text-slate-300 text-xs">No recording</span>'
+                                    }</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            });
+
+            list.innerHTML = html;
+            lucide.createIcons();
+            document.getElementById('monitorVisibleCount').textContent = Object.keys(groups).length;
+            document.getElementById('monitorTotalCalls').textContent = calls.length;
+        }
+
+        function toggleGroup(gi) {
+            const rows = document.getElementById('group-rows-' + gi);
+            const chevron = document.getElementById('chevron-' + gi);
+            const open = !rows.classList.contains('hidden');
+            rows.classList.toggle('hidden', open);
+            chevron.style.transform = open ? '' : 'rotate(90deg)';
+        }
+
         // ---- Monitor Filter ----
         function filterMonitor() {
             const q = (document.getElementById('monitorSearch').value || '').toLowerCase();
             const st = (document.getElementById('monitorStatus').value || '').toLowerCase();
-            const rows = document.querySelectorAll('.monitor-row');
-            let visible = 0;
-            rows.forEach(row => {
-                const matchQ = !q || row.dataset.name.includes(q) || row.dataset.company.includes(q) || row.dataset.phone.includes(q);
-                const matchSt = !st || (row.dataset.status || '').toLowerCase() === st;
-                const show = matchQ && matchSt;
-                row.style.display = show ? '' : 'none';
-                if (show) visible++;
+            const filtered = allMonitorCalls.filter(c => {
+                const matchQ = !q || (c.name||'').toLowerCase().includes(q) || (c.company||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q);
+                const matchSt = !st || (c.status||'').toLowerCase() === st;
+                return matchQ && matchSt;
             });
-            document.getElementById('monitorVisibleCount').textContent = visible;
+            renderMonitor(filtered);
         }
 
         function resetMonitor() {
             document.getElementById('monitorSearch').value = '';
             document.getElementById('monitorStatus').value = '';
-            filterMonitor();
+            renderMonitor(allMonitorCalls);
         }
 
         // ---- Init ----
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             loadStats();
+            allMonitorCalls = JSON.parse(document.getElementById('monitorData').textContent);
+            renderMonitor(allMonitorCalls);
         });
     </script>
 </body>
