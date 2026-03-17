@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinit Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'infinit-blue': '#1e3a8a',
+                        'infinit-light': '#3b82f6',
+                        'infinit-dark': '#0f172a',
+                        'infinit-navy': '#1e3a5f',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body { background: #f1f5f9; }
+        .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; transition: all 0.2s ease; }
+        .card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .stat-card { animation: slide-in 0.4s ease forwards; }
+        .status-badge {
+            display: inline-flex; align-items: center; padding: 2px 10px;
+            border-radius: 9999px; font-size: 0.75rem; font-weight: 600;
+        }
+        .status-voicemail { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-qualified-yes { background: #d1fae5; color: #065f46; }
+        .status-qualified-no { background: #fee2e2; color: #991b1b; }
+        .status-default { background: #e0e7ff; color: #3730a3; }
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+            padding: 12px 20px; border-radius: 10px; font-size: 0.875rem;
+            font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            animation: slide-in 0.3s ease;
+        }
+        .toast-success { background: #065f46; color: #ffffff; }
+        .toast-error { background: #991b1b; color: #ffffff; }
+        th { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
+        tr:hover td { background: #f8fafc; }
+        .summary-cell { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        #summaryModal { display: none; }
+        #summaryModal.open { display: flex; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-infinit-dark text-white px-6 py-4 flex items-center justify-between shadow-lg">
+        <div class="flex items-center gap-3">
+            <img src="https://media.licdn.com/dms/image/v2/D4D0BAQE14hGHj2-CRQ/company-logo_200_200/B4DZZogyDcGwAI-/0/1745510146620/infinitbanking_logo?e=2147483647&v=beta&t=97jKPt5GZ4My-DiMkelKJobr941lx72RHGcbTSCdBdI"
+                 alt="Infinit Banking" class="h-9 w-9 rounded-lg object-contain bg-white p-0.5">
+            <div>
+                <h1 class="font-bold text-lg leading-tight">Infinit Dashboard</h1>
+                <p class="text-slate-400 text-xs">Call tracking & analytics</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            {% if role == "admin" %}
+            <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">ADMIN</span>
+            <button
+                id="launchBatchBtn"
+                onclick="launchBatch()"
+                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
+            >
+                <i data-lucide="play-circle" class="w-4 h-4"></i>
+                Launch Batch
+            </button>
+            {% endif %}
+            <a href="/logout" class="flex items-center gap-2 text-slate-300 hover:text-white text-sm transition">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Logout
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-screen-2xl mx-auto px-6 py-6">
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="statsGrid">
+            <div class="card stat-card p-5" style="animation-delay:0.0s">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-500 text-sm font-medium">Total Calls</span>
+                    <i data-lucide="phone" class="w-5 h-5 text-blue-500"></i>
+                </div>
+                <div class="text-3xl font-bold text-slate-800" id="statTotal">—</div>
+            </div>
+            <div class="card stat-card p-5" style="animation-delay:0.1s">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-500 text-sm font-medium">Qualified</span>
+                    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+                </div>
+                <div class="text-3xl font-bold text-emerald-600" id="statQualified">—</div>
+            </div>
+            <div class="card stat-card p-5" style="animation-delay:0.2s">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-500 text-sm font-medium">Meetings</span>
+                    <i data-lucide="calendar-check" class="w-5 h-5 text-violet-500"></i>
+                </div>
+                <div class="text-3xl font-bold text-violet-600" id="statMeetings">—</div>
+            </div>
+            <div class="card stat-card p-5" style="animation-delay:0.3s">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-500 text-sm font-medium">Voicemails</span>
+                    <i data-lucide="voicemail" class="w-5 h-5 text-amber-500"></i>
+                </div>
+                <div class="text-3xl font-bold text-amber-600" id="statVoicemails">—</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="card p-5">
+                <h3 class="font-semibold text-slate-700 mb-4 text-sm">Status Distribution</h3>
+                <div class="h-52 flex items-center justify-center">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+            <div class="card p-5">
+                <h3 class="font-semibold text-slate-700 mb-4 text-sm">Qualified Breakdown</h3>
+                <div class="h-52 flex items-center justify-center">
+                    <canvas id="qualifiedChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <!-- Filters -->
+            <div class="p-4 border-b border-slate-100 flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
+                    <span class="text-sm font-medium text-slate-600">Filters:</span>
+                </div>
+                <select id="filterStatus" onchange="applyFilters()" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Statuses</option>
+                    <option>Voicemail</option>
+                    <option>Completed</option>
+                    <option>No Answer</option>
+                    <option>In Progress</option>
+                    <option>Failed</option>
+                </select>
+                <select id="filterQualified" onchange="applyFilters()" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Qualified</option>
+                    <option>Yes</option>
+                    <option>No</option>
+                </select>
+                <input id="filterCountry" onkeyup="applyFilters()" placeholder="Country..." class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32">
+                <button onclick="resetFilters()" class="text-sm text-blue-600 hover:text-blue-800 transition ml-auto">Reset</button>
+            </div>
+
+            <!-- Table body -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-slate-700">
+                    <thead>
+                        <tr class="border-b border-slate-100">
+                            <th class="px-4 py-3 text-left">Name</th>
+                            <th class="px-4 py-3 text-left">Company</th>
+                            <th class="px-4 py-3 text-left">Phone</th>
+                            <th class="px-4 py-3 text-left">Country</th>
+                            <th class="px-4 py-3 text-left">Status</th>
+                            <th class="px-4 py-3 text-left">Qualified</th>
+                            <th class="px-4 py-3 text-left">Meeting</th>
+                            <th class="px-4 py-3 text-left">Attempt</th>
+                            <th class="px-4 py-3 text-left">Duration</th>
+                            <th class="px-4 py-3 text-left">Summary</th>
+                            <th class="px-4 py-3 text-left">Call</th>
+                            <th class="px-4 py-3 text-left">Date</th>
+                            {% if role == "admin" %}
+                            <th class="px-4 py-3 text-left">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody id="callsTableBody">
+                        {% for call in calls %}
+                        <tr class="border-b border-slate-50" data-id="{{ call.id }}"
+                            data-status="{{ call.status or '' }}"
+                            data-qualified="{{ call.qualified or '' }}"
+                            data-country="{{ call.country or '' }}">
+                            <td class="px-4 py-3 font-medium text-slate-800">{{ call.name or '—' }}</td>
+                            <td class="px-4 py-3 text-slate-600">{{ call.company or '—' }}</td>
+                            <td class="px-4 py-3 font-mono text-xs">{{ call.phone or '—' }}</td>
+                            <td class="px-4 py-3">{{ call.country or '—' }}</td>
+                            <td class="px-4 py-3">
+                                {% set s = (call.status or '').lower() %}
+                                {% if s == 'voicemail' %}
+                                    <span class="status-badge status-voicemail">{{ call.status }}</span>
+                                {% elif s == 'completed' %}
+                                    <span class="status-badge status-completed">{{ call.status }}</span>
+                                {% else %}
+                                    <span class="status-badge status-default">{{ call.status or '—' }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if call.qualified == 'Yes' %}
+                                    <span class="status-badge status-qualified-yes">Yes</span>
+                                {% elif call.qualified == 'No' %}
+                                    <span class="status-badge status-qualified-no">No</span>
+                                {% else %}
+                                    <span class="text-slate-400">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-xs text-slate-600">{{ call.meeting or '—' }}</td>
+                            <td class="px-4 py-3 text-center">{{ call.attempt or '—' }}</td>
+                            <td class="px-4 py-3 text-center">{{ call.duration or '—' }}s</td>
+                            <td class="px-4 py-3">
+                                <span class="summary-cell text-xs text-slate-500"
+                                      title="{{ call.summary or '' }}"
+                                      onclick="showSummary('{{ (call.name or '') | replace("'", "\\'") }}', '{{ (call.summary or '') | replace("'", "\\'") | replace('\n', '\\n') }}')">
+                                    {{ call.summary or '—' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if call.call_url %}
+                                    <a href="{{ call.call_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="text-slate-300">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                                {% if call.created_at %}
+                                    {{ call.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            {% if role == "admin" %}
+                            <td class="px-4 py-3">
+                                <button onclick="deleteCall({{ call.id }}, this)"
+                                        class="text-red-400 hover:text-red-600 transition"
+                                        title="Delete">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="13" class="px-4 py-12 text-center text-slate-400">
+                                No calls recorded yet. Waiting for webhook data.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="px-4 py-3 text-xs text-slate-400 border-t border-slate-100" id="tableFooter">
+                Showing <span id="visibleCount">{{ calls | length }}</span> of {{ calls | length }} records
+            </div>
+        </div>
+    </main>
+
+    <!-- Summary Modal -->
+    <div id="summaryModal" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-slate-800" id="summaryModalName">Call Summary</h3>
+                <button onclick="closeSummary()" class="text-slate-400 hover:text-slate-600 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap" id="summaryModalText"></p>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer"></div>
+
+    <script>
+        lucide.createIcons();
+
+        // ---- Stats ----
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/statistics');
+                const data = await res.json();
+                animateCount('statTotal', data.total);
+                animateCount('statQualified', data.qualified_yes);
+                animateCount('statMeetings', data.meetings);
+                animateCount('statVoicemails', data.voicemails);
+                renderCharts(data);
+            } catch (e) {
+                console.error('Failed to load stats', e);
+            }
+        }
+
+        function animateCount(id, target) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            anime({ targets: { val: 0 }, val: target, round: 1, duration: 800, easing: 'easeOutExpo',
+                update: function(anim) { el.textContent = Math.round(anim.animations[0].currentValue); }
+            });
+        }
+
+        // ---- Charts ----
+        let statusChartInst, qualifiedChartInst;
+
+        function renderCharts(data) {
+            const statusLabels = Object.keys(data.by_status || {});
+            const statusValues = Object.values(data.by_status || {});
+            const palette = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+
+            if (statusChartInst) statusChartInst.destroy();
+            statusChartInst = new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{ data: statusValues, backgroundColor: palette, borderWidth: 2, borderColor: '#fff' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { font: { size: 12 }, padding: 12 } } }
+                }
+            });
+
+            if (qualifiedChartInst) qualifiedChartInst.destroy();
+            qualifiedChartInst = new Chart(document.getElementById('qualifiedChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Qualified Yes', 'Qualified No'],
+                    datasets: [{
+                        data: [data.qualified_yes, data.qualified_no],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderRadius: 6,
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+
+        // ---- Filters ----
+        function applyFilters() {
+            const status = document.getElementById('filterStatus').value.toLowerCase();
+            const qualified = document.getElementById('filterQualified').value.toLowerCase();
+            const country = document.getElementById('filterCountry').value.toLowerCase();
+            const rows = document.querySelectorAll('#callsTableBody tr[data-id]');
+            let visible = 0;
+            rows.forEach(row => {
+                const rs = (row.dataset.status || '').toLowerCase();
+                const rq = (row.dataset.qualified || '').toLowerCase();
+                const rc = (row.dataset.country || '').toLowerCase();
+                const show = (!status || rs === status) && (!qualified || rq === qualified) && (!country || rc.includes(country));
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            document.getElementById('visibleCount').textContent = visible;
+        }
+
+        function resetFilters() {
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterQualified').value = '';
+            document.getElementById('filterCountry').value = '';
+            applyFilters();
+        }
+
+        // ---- Delete ----
+        async function deleteCall(id, btn) {
+            if (!confirm('Delete this call record?')) return;
+            try {
+                const res = await fetch(`/api/calls/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    btn.closest('tr').remove();
+                    showToast('Record deleted', 'success');
+                    loadStats();
+                } else {
+                    showToast('Delete failed', 'error');
+                }
+            } catch (e) {
+                showToast('Delete failed', 'error');
+            }
+        }
+
+        // ---- Launch Batch ----
+        async function launchBatch() {
+            const btn = document.getElementById('launchBatchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Launching...';
+            try {
+                const res = await fetch('/api/launch-batch', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Batch launched successfully!', 'success');
+                } else {
+                    showToast('Batch launch failed: ' + data.message, 'error');
+                }
+            } catch (e) {
+                showToast('Batch launch failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> Launch Batch';
+                lucide.createIcons();
+            }
+        }
+
+        // ---- Summary Modal ----
+        function showSummary(name, text) {
+            document.getElementById('summaryModalName').textContent = name || 'Call Summary';
+            document.getElementById('summaryModalText').textContent = text || 'No summary available.';
+            document.getElementById('summaryModal').classList.add('open');
+        }
+        function closeSummary() {
+            document.getElementById('summaryModal').classList.remove('open');
+        }
+
+        // ---- Toast ----
+        function showToast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        // ---- Init ----
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadStats();
+        });
+    </script>
+</body>
+</html>
