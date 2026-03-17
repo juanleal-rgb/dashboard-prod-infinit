@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinit Dashboard</title>
+    <link rel="icon" type="image/png" href="https://media.licdn.com/dms/image/v2/D4D0BAQE14hGHj2-CRQ/company-logo_200_200/B4DZZogyDcGwAI-/0/1745510146620/infinitbanking_logo?e=2147483647&v=beta&t=97jKPt5GZ4My-DiMkelKJobr941lx72RHGcbTSCdBdI">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -86,7 +87,24 @@
         </div>
     </header>
 
+    <!-- Tab Nav -->
+    <div class="bg-white border-b border-slate-200 px-6">
+        <nav class="flex gap-0 max-w-screen-2xl mx-auto">
+            <button onclick="switchTab('analytics')" id="tab-analytics"
+                class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-blue-600 text-blue-700 flex items-center gap-2 transition">
+                <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Analytics
+            </button>
+            <button onclick="switchTab('monitor')" id="tab-monitor"
+                class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 transition">
+                <i data-lucide="activity" class="w-4 h-4"></i> Monitor
+            </button>
+        </nav>
+    </div>
+
     <main class="max-w-screen-2xl mx-auto px-6 py-6">
+
+        <!-- ===== ANALYTICS TAB ===== -->
+        <div id="pane-analytics">
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="statsGrid">
@@ -263,6 +281,124 @@
                 Showing <span id="visibleCount">{{ calls | length }}</span> of {{ calls | length }} records
             </div>
         </div>
+
+        </div><!-- end pane-analytics -->
+
+        <!-- ===== MONITOR TAB ===== -->
+        <div id="pane-monitor" class="hidden">
+
+            <div class="card">
+                <!-- Monitor search bar -->
+                <div class="p-4 border-b border-slate-100 flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                        <span class="text-sm font-medium text-slate-600">Search:</span>
+                    </div>
+                    <input id="monitorSearch" oninput="filterMonitor()" placeholder="Name, company, phone..."
+                        class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-56">
+                    <select id="monitorStatus" onchange="filterMonitor()" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Statuses</option>
+                        <option>Voicemail</option>
+                        <option>Completed</option>
+                        <option>No Answer</option>
+                        <option>In Progress</option>
+                        <option>Failed</option>
+                    </select>
+                    <button onclick="resetMonitor()" class="text-sm text-blue-600 hover:text-blue-800 transition ml-auto">Reset</button>
+                </div>
+
+                <!-- Monitor table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-slate-700">
+                        <thead>
+                            <tr class="border-b border-slate-100">
+                                <th class="px-4 py-3 text-left">Name</th>
+                                <th class="px-4 py-3 text-left">Company</th>
+                                <th class="px-4 py-3 text-left">Phone</th>
+                                <th class="px-4 py-3 text-left">Country</th>
+                                <th class="px-4 py-3 text-left">Status</th>
+                                <th class="px-4 py-3 text-left">Qualified</th>
+                                <th class="px-4 py-3 text-left">Attempt</th>
+                                <th class="px-4 py-3 text-left">Duration</th>
+                                <th class="px-4 py-3 text-left">Date</th>
+                                <th class="px-4 py-3 text-left">Recording</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monitorTableBody">
+                            {% for call in calls %}
+                            <tr class="border-b border-slate-50 monitor-row"
+                                data-name="{{ (call.name or '').lower() }}"
+                                data-company="{{ (call.company or '').lower() }}"
+                                data-phone="{{ (call.phone or '').lower() }}"
+                                data-status="{{ call.status or '' }}">
+                                <td class="px-4 py-3 font-medium text-slate-800">{{ call.name or '—' }}</td>
+                                <td class="px-4 py-3 text-slate-600">{{ call.company or '—' }}</td>
+                                <td class="px-4 py-3 font-mono text-xs">{{ call.phone or '—' }}</td>
+                                <td class="px-4 py-3">{{ call.country or '—' }}</td>
+                                <td class="px-4 py-3">
+                                    {% set s = (call.status or '').lower() %}
+                                    {% if s == 'voicemail' %}
+                                        <span class="status-badge status-voicemail">{{ call.status }}</span>
+                                    {% elif s == 'completed' %}
+                                        <span class="status-badge status-completed">{{ call.status }}</span>
+                                    {% else %}
+                                        <span class="status-badge status-default">{{ call.status or '—' }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if call.qualified == 'Yes' %}
+                                        <span class="status-badge status-qualified-yes">Yes</span>
+                                    {% elif call.qualified == 'No' %}
+                                        <span class="status-badge status-qualified-no">No</span>
+                                    {% else %}
+                                        <span class="text-slate-400">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 text-center">{{ call.attempt or '—' }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    {% if call.duration and call.duration != '0' %}
+                                        {{ call.duration }}s
+                                    {% else %}
+                                        <span class="text-slate-400">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                                    {% if call.created_at %}
+                                        {{ call.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if call.call_url %}
+                                        <a href="{{ call.call_url }}" target="_blank"
+                                           class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                            <i data-lucide="play" class="w-3 h-3"></i>
+                                            View
+                                        </a>
+                                    {% else %}
+                                        <span class="text-slate-300 text-xs">No recording</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="10" class="px-4 py-12 text-center text-slate-400">
+                                    No calls recorded yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-4 py-3 text-xs text-slate-400 border-t border-slate-100">
+                    Showing <span id="monitorVisibleCount">{{ calls | length }}</span> of {{ calls | length }} records
+                </div>
+            </div>
+
+        </div><!-- end pane-monitor -->
+
     </main>
 
     <!-- Summary Modal -->
@@ -427,6 +563,44 @@
             toast.textContent = message;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3500);
+        }
+
+        // ---- Tabs ----
+        function switchTab(tab) {
+            ['analytics', 'monitor'].forEach(t => {
+                document.getElementById('pane-' + t).classList.toggle('hidden', t !== tab);
+                const btn = document.getElementById('tab-' + t);
+                if (t === tab) {
+                    btn.classList.add('border-blue-600', 'text-blue-700');
+                    btn.classList.remove('border-transparent', 'text-slate-500');
+                } else {
+                    btn.classList.remove('border-blue-600', 'text-blue-700');
+                    btn.classList.add('border-transparent', 'text-slate-500');
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // ---- Monitor Filter ----
+        function filterMonitor() {
+            const q = (document.getElementById('monitorSearch').value || '').toLowerCase();
+            const st = (document.getElementById('monitorStatus').value || '').toLowerCase();
+            const rows = document.querySelectorAll('.monitor-row');
+            let visible = 0;
+            rows.forEach(row => {
+                const matchQ = !q || row.dataset.name.includes(q) || row.dataset.company.includes(q) || row.dataset.phone.includes(q);
+                const matchSt = !st || (row.dataset.status || '').toLowerCase() === st;
+                const show = matchQ && matchSt;
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            document.getElementById('monitorVisibleCount').textContent = visible;
+        }
+
+        function resetMonitor() {
+            document.getElementById('monitorSearch').value = '';
+            document.getElementById('monitorStatus').value = '';
+            filterMonitor();
         }
 
         // ---- Init ----
