@@ -208,7 +208,7 @@ async def get_statistics(request: Request, db: Session = Depends(get_db)):
     total = db.query(InfinitCall).count()
     qualified_yes = db.query(InfinitCall).filter(InfinitCall.qualified == "Yes").count()
     qualified_no = db.query(InfinitCall).filter(InfinitCall.qualified == "No").count()
-    meetings = db.query(InfinitCall).filter(InfinitCall.meeting != "", InfinitCall.meeting.isnot(None)).count()
+    meetings = db.query(InfinitCall).filter(InfinitCall.status.ilike("%meeting%")).count()
     voicemails = db.query(InfinitCall).filter(InfinitCall.status == "Voicemail").count()
 
     # Status breakdown
