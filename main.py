@@ -1,6 +1,6 @@
 import os
 import logging
-from fastapi import FastAPI, Depends, HTTPException, Request, Response, Form
+from fastapi import FastAPI, Depends, HTTPException, Request, Response, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -37,6 +37,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "infinit-dashboard-secret-key-change-me")
 DASHBOARD_PASSWORD = os.getenv("DASHBOARD_PASSWORD", "")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 BATCH_WEBHOOK_URL = "https://workflows.platform.happyrobot.ai/hooks/9rwfk2fvy3nm"
+HAPPYROBOT_API_KEY = os.getenv("HAPPYROBOT_API_KEY", "")
 
 serializer = URLSafeSerializer(SECRET_KEY)
 COOKIE_NAME = "infinit_session"
@@ -183,6 +184,105 @@ async def get_calls(
     if country:
         query = query.filter(InfinitCall.country == country)
     return query.all()
+
+
+@app.get("/api/download-transcripts")
+async def download_transcripts(
+    request: Request,
+    status: List[str] = Query(default=[]),
+    qualified: Optional[str] = None,
+    country: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    from fastapi.responses import StreamingResponse
+    from sqlalchemy import func
+    import csv, io
+
+    role = get_session(request)
+    if not role:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    query = db.query(InfinitCall).order_by(InfinitCall.created_at.desc())
+    if status:
+        query = query.filter(func.lower(InfinitCall.status).in_([s.lower() for s in status]))
+    if qualified:
+        query = query.filter(InfinitCall.qualified == qualified)
+    if country:
+        query = query.filter(InfinitCall.country.ilike(f"%{country}%"))
+    if date_from:
+        try:
+            query = query.filter(InfinitCall.created_at >= datetime.fromisoformat(date_from))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            query = query.filter(InfinitCall.created_at <= datetime.fromisoformat(date_to + "T23:59:59"))
+        except ValueError:
+            pass
+
+    calls = query.all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["name", "company", "legal_number", "phone", "country", "status",
+                     "qualified", "meeting", "attempt", "duration", "date", "summary", "transcript"])
+
+    headers_hr = {"Authorization": f"Bearer {HAPPYROBOT_API_KEY}"} if HAPPYROBOT_API_KEY else {}
+
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+        for call in calls:
+            transcript = ""
+            if call.call_url and HAPPYROBOT_API_KEY:
+                try:
+                    run_id = call.call_url.split("run_id=")[-1].split("&")[0]
+                    # Step 1: get sessions for this run
+                    resp = await client.get(
+                        f"https://platform.happyrobot.ai/api/v2/runs/{run_id}/sessions",
+                        headers=headers_hr
+                    )
+                    if resp.status_code == 200:
+                        sessions = resp.json().get("data", [])
+                        lines = []
+                        for session in sessions:
+                            session_id = session.get("id")
+                            if not session_id:
+                                continue
+                            # Step 2: get messages for this session
+                            msg_resp = await client.get(
+                                f"https://platform.happyrobot.ai/api/v2/sessions/{session_id}/messages",
+                                headers=headers_hr
+                            )
+                            if msg_resp.status_code == 200:
+                                for msg in msg_resp.json().get("data", []):
+                                    role = (msg.get("role") or "?").upper()
+                                    content = msg.get("content") or ""
+                                    if content and role not in ("EVENT",):
+                                        lines.append(f"[{role}]: {content}")
+                        transcript = " | ".join(lines)
+                    else:
+                        transcript = f"HTTP {resp.status_code}"
+                except Exception as e:
+                    transcript = f"Error: {str(e)}"
+
+            writer.writerow([
+                call.name or "", call.company or "", call.legal_number or "",
+                call.phone or "", call.country or "", call.status or "",
+                call.qualified or "", call.meeting or "", call.attempt or "",
+                call.duration or "",
+                call.created_at.strftime("%Y-%m-%d %H:%M") if call.created_at else "",
+                (call.summary or "").replace("\n", " "),
+                transcript,
+            ])
+
+    output.seek(0)
+    filename = f"infinit_transcripts_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 @app.delete("/api/calls/{call_id}")

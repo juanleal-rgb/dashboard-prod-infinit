@@ -191,6 +191,11 @@
                     Launch Batch
                 </button>
                 {% endif %}
+                <button onclick="openTranscriptModal()"
+                    class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/25 rounded-lg transition">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Transcripts
+                </button>
                 <a href="/logout" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition">
                     <i data-lucide="log-out" class="w-4 h-4"></i>
                     Logout
@@ -551,6 +556,76 @@
     <!-- Toast container -->
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+    <!-- Transcript Download Modal -->
+    <div id="transcriptModal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-[#E5E5E5]">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E5]">
+                <div>
+                    <h3 class="font-bold text-black text-sm uppercase tracking-wide">Download Transcripts</h3>
+                    <p class="text-xs text-[#808080] mt-0.5">Filter calls and export as CSV with full transcripts</p>
+                </div>
+                <button onclick="closeTranscriptModal()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                    <i data-lucide="x" class="w-4 h-4 text-[#808080]"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-medium text-[#757575]">Status</label>
+                        <button type="button" onclick="toggleAllStatuses()" id="dlStatusToggleBtn" class="text-xs text-[#A3A3A3] hover:text-black transition">Deselect all</button>
+                    </div>
+                    <div class="border border-[#E5E5E5] rounded-lg p-3 grid grid-cols-2 gap-y-2 gap-x-3">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-[#333]"><input type="checkbox" value="avoid callback" checked class="dl-status-cb accent-black"> Avoid Callback</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-[#333]"><input type="checkbox" value="hang up" checked class="dl-status-cb accent-black"> Hang Up</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-[#333]"><input type="checkbox" value="voicemail" class="dl-status-cb accent-black"> Voicemail</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-[#333]"><input type="checkbox" value="not the right person" checked class="dl-status-cb accent-black"> Not The Right Person</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-[#333]"><input type="checkbox" value="not interested" checked class="dl-status-cb accent-black"> Not Interested</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-[#333]"><input type="checkbox" value="callback requested" checked class="dl-status-cb accent-black"> Callback Requested</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-[#333]"><input type="checkbox" value="meeting scheduled" checked class="dl-status-cb accent-black"> Meeting Scheduled</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-[#333]"><input type="checkbox" value="send information" checked class="dl-status-cb accent-black"> Send Information</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs col-span-2 text-[#333]"><input type="checkbox" value="remove from pipeline" checked class="dl-status-cb accent-black"> Remove From Pipeline</label>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-[#757575] block mb-1.5">Qualified</label>
+                    <select id="dlQualified" class="input-dash w-full px-3 py-2 text-sm">
+                        <option value="">All</option>
+                        <option>Yes</option>
+                        <option>No</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-[#757575] block mb-1.5">Country</label>
+                    <input id="dlCountry" placeholder="e.g. UK" class="input-dash w-full px-3 py-2 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-medium text-[#757575] block mb-1.5">Date from</label>
+                        <input id="dlDateFrom" type="date" class="input-dash w-full px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-[#757575] block mb-1.5">Date to</label>
+                        <input id="dlDateTo" type="date" class="input-dash w-full px-3 py-2 text-sm">
+                    </div>
+                </div>
+                <div id="dlInfo" class="text-xs text-[#A3A3A3] bg-[#F7F7F7] rounded-lg px-3 py-2 hidden">
+                    <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                    Transcripts are fetched live from HappyRobot. This may take a moment for large exports.
+                </div>
+            </div>
+            <div class="flex gap-3 px-6 pb-6">
+                <button onclick="closeTranscriptModal()" class="flex-1 btn-primary px-4 py-2.5 text-sm font-medium rounded-lg">
+                    Cancel
+                </button>
+                <button onclick="downloadTranscripts()" id="dlBtn"
+                    class="flex-1 btn-black flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-lg">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Download CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
 
@@ -810,6 +885,63 @@
             finally {
                 btn.disabled = false;
                 btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> Launch Batch';
+                lucide.createIcons();
+            }
+        }
+
+        // ---- Transcript Download Modal ----
+        function openTranscriptModal() {
+            const modal = document.getElementById('transcriptModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('dlInfo').classList.remove('hidden');
+            lucide.createIcons();
+        }
+        function closeTranscriptModal() {
+            const modal = document.getElementById('transcriptModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        function toggleAllStatuses() {
+            const cbs = document.querySelectorAll('.dl-status-cb');
+            const anyChecked = [...cbs].some(cb => cb.checked);
+            cbs.forEach(cb => cb.checked = !anyChecked);
+            document.getElementById('dlStatusToggleBtn').textContent = anyChecked ? 'Select all' : 'Deselect all';
+        }
+        async function downloadTranscripts() {
+            const btn = document.getElementById('dlBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Exporting...';
+
+            const params = new URLSearchParams();
+            const checkedStatuses = [...document.querySelectorAll('.dl-status-cb:checked')].map(cb => cb.value);
+            checkedStatuses.forEach(s => params.append('status', s));
+            const qualified = document.getElementById('dlQualified').value;
+            const country  = document.getElementById('dlCountry').value;
+            const dateFrom = document.getElementById('dlDateFrom').value;
+            const dateTo   = document.getElementById('dlDateTo').value;
+            if (qualified) params.set('qualified', qualified);
+            if (country)   params.set('country', country);
+            if (dateFrom)  params.set('date_from', dateFrom);
+            if (dateTo)    params.set('date_to', dateTo);
+
+            try {
+                const res = await fetch('/api/download-transcripts?' + params.toString());
+                if (!res.ok) throw new Error('Export failed');
+                const blob = await res.blob();
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                a.href = url;
+                a.download = `infinit_transcripts_${new Date().toISOString().slice(0,10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                closeTranscriptModal();
+                showToast('Transcripts exported!', 'success');
+            } catch (e) {
+                showToast('Export failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download CSV';
                 lucide.createIcons();
             }
         }
