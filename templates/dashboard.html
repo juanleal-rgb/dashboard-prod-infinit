@@ -312,7 +312,7 @@
             <!-- Charts Row 3: By Attempt + By Country -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div class="card-dash p-6">
-                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Calls by Attempt</h3>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Connected Calls by Attempt</h3>
                     <div class="chart-container" style="height: 220px;">
                         <canvas id="attemptsChart"></canvas>
                     </div>
@@ -787,9 +787,7 @@
                 '0-30s':  '#EF4444',
                 '30s-1m': '#F97316',
                 '1-2m':   '#F59E0B',
-                '2-3m':   '#14B8A6',
-                '3-5m':   '#6366F1',
-                '5m+':    '#00B35E',
+                '>2m':    '#00B35E',
             };
             document.getElementById('durTotal').textContent = durTotal + ' calls';
             const bucketsEl = document.getElementById('durBuckets');

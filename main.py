@@ -320,12 +320,17 @@ async def get_statistics(request: Request, db: Session = Depends(get_db)):
     country_counts = db.query(InfinitCall.country, func.count(InfinitCall.id)).group_by(InfinitCall.country).all()
     by_country = {c: n for c, n in country_counts if c}
 
-    attempt_counts = db.query(InfinitCall.attempt, func.count(InfinitCall.id)).group_by(InfinitCall.attempt).all()
+    UNREACHED = ("voicemail", "hang up")
+    reached_filter = ~func.lower(InfinitCall.status).in_(UNREACHED)
+
+    attempt_counts = (db.query(InfinitCall.attempt, func.count(InfinitCall.id))
+                      .filter(reached_filter)
+                      .group_by(InfinitCall.attempt).all())
     by_attempt = {a: c for a, c in sorted(attempt_counts, key=lambda x: int(x[0]) if x[0] and x[0].isdigit() else 99) if a}
 
-    # Duration distribution buckets
-    all_durations = db.query(InfinitCall.duration).all()
-    dur_buckets = {"0-30s": 0, "30s-1m": 0, "1-2m": 0, "2-3m": 0, "3-5m": 0, "5m+": 0}
+    # Duration distribution buckets (reached calls only)
+    all_durations = db.query(InfinitCall.duration).filter(reached_filter).all()
+    dur_buckets = {"0-30s": 0, "30s-1m": 0, "1-2m": 0, ">2m": 0}
     for (d,) in all_durations:
         try:
             secs = float(d or 0)
@@ -334,9 +339,7 @@ async def get_statistics(request: Request, db: Session = Depends(get_db)):
         if secs < 30:       dur_buckets["0-30s"]  += 1
         elif secs < 60:     dur_buckets["30s-1m"] += 1
         elif secs < 120:    dur_buckets["1-2m"]   += 1
-        elif secs < 180:    dur_buckets["2-3m"]   += 1
-        elif secs < 300:    dur_buckets["3-5m"]   += 1
-        else:               dur_buckets["5m+"]    += 1
+        else:               dur_buckets[">2m"]    += 1
 
     from datetime import date, timedelta
     thirty_days_ago = date.today() - timedelta(days=29)
