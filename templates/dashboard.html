@@ -14,10 +14,12 @@
             theme: {
                 extend: {
                     colors: {
-                        'infinit-blue': '#1e3a8a',
-                        'infinit-light': '#3b82f6',
-                        'infinit-dark': '#0f172a',
-                        'infinit-navy': '#1e3a5f',
+                        'neon-green':   '#00B35E',
+                        'neon-blue':    '#0099BB',
+                        'neon-purple':  '#7A1AB3',
+                        'neon-pink':    '#B30050',
+                        'neon-orange':  '#B3491F',
+                        'electric-cyan':'#00A8B3',
                     }
                 }
             }
@@ -25,300 +27,498 @@
     </script>
     <style>
         @keyframes slide-in {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        body { background: #f1f5f9; }
-        .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; transition: all 0.2s ease; }
-        .card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
-        .stat-card { animation: slide-in 0.4s ease forwards; }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 12px rgba(255,255,255,0.2); }
+            50%       { box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        }
+
+        body { background: #FFFFFF; }
+
+        .card-dash {
+            background: #FFFFFF;
+            border: 1px solid #E5E5E5;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-dash::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.03), transparent);
+            transition: left 0.5s ease;
+        }
+        .card-dash:hover::before { left: 100%; }
+        .card-dash:hover {
+            border-color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .stat-card { animation: slide-in 0.6s ease forwards; opacity: 0; }
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
         .status-badge {
-            display: inline-flex; align-items: center; padding: 2px 10px;
-            border-radius: 9999px; font-size: 0.75rem; font-weight: 600;
+            display: inline-flex; align-items: center;
+            padding: 2px 10px; border-radius: 9999px;
+            font-size: 0.75rem; font-weight: 600;
         }
-        .status-voicemail { background: #fef3c7; color: #92400e; }
-        .status-completed { background: #d1fae5; color: #065f46; }
-        .status-qualified-yes { background: #d1fae5; color: #065f46; }
-        .status-qualified-no { background: #fee2e2; color: #991b1b; }
-        .status-default { background: #e0e7ff; color: #3730a3; }
+        .status-voicemail   { background: linear-gradient(135deg, #B3491F, #B30050); color: #fff; }
+        .status-meeting     { background: linear-gradient(135deg, #00B35E, #0099BB); color: #fff; }
+        .status-callback    { background: linear-gradient(135deg, #0099BB, #7A1AB3); color: #fff; }
+        .status-info        { background: linear-gradient(135deg, #7A1AB3, #0099BB); color: #fff; }
+        .status-negative    { background: linear-gradient(135deg, #B30050, #B3491F); color: #fff; }
+        .status-default     { background: #F3F3F3; color: #555; border: 1px solid #E5E5E5; }
+        .status-qualified-yes { background: linear-gradient(135deg, #00B35E, #00A8B3); color: #fff; }
+        .status-qualified-no  { background: linear-gradient(135deg, #B30050, #B3491F); color: #fff; }
+
+        .table-row {
+            transition: background 0.15s ease;
+            border-bottom: 1px solid #E5E5E5;
+        }
+        .table-row:hover { background: #F7F7F7; }
+
+        .modal-overlay {
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+        }
+
+        .input-dash {
+            background: #FFFFFF;
+            border: 1px solid #E5E5E5;
+            color: #000000;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+        .input-dash:focus {
+            border-color: #000000;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary {
+            background: #F3F3F3;
+            color: #000;
+            border: 1px solid #E5E5E5;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+        .btn-primary:hover {
+            background: #E5E5E5;
+            border-color: #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .btn-black {
+            background: #000000;
+            color: #ffffff;
+            font-weight: 600;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .btn-black:hover {
+            background: #1a1a1a;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .summary-cell {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            max-width: 100%;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #F3F3F3; }
+        ::-webkit-scrollbar-thumb { background: #D4D4D4; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #A3A3A3; }
+
         .toast {
-            position: fixed; bottom: 24px; right: 24px; z-index: 9999;
             padding: 12px 20px; border-radius: 10px; font-size: 0.875rem;
-            font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
             animation: slide-in 0.3s ease;
         }
-        .toast-success { background: #065f46; color: #ffffff; }
-        .toast-error { background: #991b1b; color: #ffffff; }
-        th { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
-        tr:hover td { background: #f8fafc; }
-        .summary-cell { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; max-width: 100%; }
+        .toast-success { background: #000; color: #fff; }
+        .toast-error   { background: #B30050; color: #fff; }
+
         #summaryModal { display: none; }
         #summaryModal.open { display: flex; }
+
+        .chart-container { position: relative; height: 280px; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen text-black">
 
-    <!-- Header -->
-    <header class="bg-infinit-dark text-white px-6 py-4 flex items-center justify-between shadow-lg">
-        <div class="flex items-center gap-3">
-            <img src="https://media.licdn.com/dms/image/v2/D4D0BAQE14hGHj2-CRQ/company-logo_200_200/B4DZZogyDcGwAI-/0/1745510146620/infinitbanking_logo?e=2147483647&v=beta&t=97jKPt5GZ4My-DiMkelKJobr941lx72RHGcbTSCdBdI"
-                 alt="Infinit Banking" class="h-9 w-9 rounded-lg object-contain bg-white p-0.5">
-            <div>
-                <h1 class="font-bold text-lg leading-tight">Infinit Dashboard</h1>
-                <p class="text-slate-400 text-xs">Call tracking & analytics</p>
+    <!-- HEADER -->
+    <header class="border-b border-[#1a2a4a] px-6 py-4 sticky top-0 z-40 shadow-lg" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #312e81 100%)">
+        <div class="flex items-center justify-between max-w-screen-2xl mx-auto">
+            <div class="flex items-center gap-3">
+                <img src="https://media.licdn.com/dms/image/v2/D4D0BAQE14hGHj2-CRQ/company-logo_200_200/B4DZZogyDcGwAI-/0/1745510146620/infinitbanking_logo?e=2147483647&v=beta&t=97jKPt5GZ4My-DiMkelKJobr941lx72RHGcbTSCdBdI"
+                     alt="Infinit Banking" class="h-9 w-9 rounded-lg object-contain">
+                <div class="border-l border-white/20 pl-3 ml-1">
+                    <h1 class="text-lg font-bold text-white uppercase tracking-wide">Infinit Dashboard</h1>
+                    <p class="text-blue-300 text-xs font-medium">Call tracking & analytics</p>
+                </div>
             </div>
-        </div>
-        <div class="flex items-center gap-3">
-            {% if role == "admin" %}
-            <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">ADMIN</span>
-            <button
-                id="launchBatchBtn"
-                onclick="launchBatch()"
-                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
-            >
-                <i data-lucide="play-circle" class="w-4 h-4"></i>
-                Launch Batch
-            </button>
-            {% endif %}
-            <a href="/logout" class="flex items-center gap-2 text-slate-300 hover:text-white text-sm transition">
-                <i data-lucide="log-out" class="w-4 h-4"></i>
-                Logout
-            </a>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4 text-blue-300 flex-shrink-0"></i>
+                    <input id="filterWeek" type="week" onchange="applyFilters(); filterMonitor()"
+                        title="Filter by week (Mon–Fri)"
+                        class="bg-white/10 border border-white/25 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-white/50 [color-scheme:dark]">
+                    <button id="btnTotal" onclick="clearWeekFilter()"
+                        class="text-xs font-semibold px-3 py-2 rounded-lg border border-white/25 text-blue-200 bg-white/10 hover:bg-white/20 transition whitespace-nowrap">
+                        Total
+                    </button>
+                </div>
+                {% if role == "admin" %}
+                <span class="bg-white/15 text-white text-xs font-bold px-3 py-1 rounded-full border border-white/25">ADMIN</span>
+                <button id="launchBatchBtn" onclick="launchBatch()"
+                    class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/25 rounded-lg transition">
+                    <i data-lucide="play-circle" class="w-4 h-4"></i>
+                    Launch Batch
+                </button>
+                {% endif %}
+                <a href="/logout" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    Logout
+                </a>
+            </div>
         </div>
     </header>
 
-    <!-- Tab Nav -->
-    <div class="bg-white border-b border-slate-200 px-6">
+    <!-- TAB NAV -->
+    <div class="bg-white border-b border-gray-200 px-6 shadow-sm">
         <nav class="flex gap-0 max-w-screen-2xl mx-auto">
             <button onclick="switchTab('analytics')" id="tab-analytics"
-                class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-blue-600 text-blue-700 flex items-center gap-2 transition">
+                class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-black text-black flex items-center gap-2 transition">
                 <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Analytics
             </button>
             <button onclick="switchTab('monitor')" id="tab-monitor"
-                class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 transition">
+                class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-[#808080] hover:text-black flex items-center gap-2 transition">
                 <i data-lucide="activity" class="w-4 h-4"></i> Monitor
             </button>
         </nav>
     </div>
 
-    <main class="max-w-screen-2xl mx-auto px-6 py-6">
+    <main class="max-w-screen-2xl mx-auto px-6 py-8">
 
         <!-- ===== ANALYTICS TAB ===== -->
         <div id="pane-analytics">
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="statsGrid">
-            <div class="card stat-card p-5" style="animation-delay:0.0s">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-slate-500 text-sm font-medium">Total Calls</span>
-                    <i data-lucide="phone" class="w-5 h-5 text-blue-500"></i>
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="card-dash p-5 stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[#808080] text-sm font-medium uppercase tracking-wide">Total Calls</p>
+                            <p class="text-3xl font-bold mt-1 text-black" id="statTotal">—</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center">
+                            <i data-lucide="phone" class="w-5 h-5 text-electric-cyan"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 h-1 bg-[#E5E5E5] rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-neon-purple to-electric-cyan" style="width:100%"></div>
+                    </div>
                 </div>
-                <div class="text-3xl font-bold text-slate-800" id="statTotal">—</div>
-            </div>
-            <div class="card stat-card p-5" style="animation-delay:0.1s">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-slate-500 text-sm font-medium">Qualified</span>
-                    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+                <div class="card-dash p-5 stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[#808080] text-sm font-medium uppercase tracking-wide">Qualified</p>
+                            <p class="text-3xl font-bold mt-1 text-black" id="statQualified">—</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-neon-green"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 h-1 bg-[#E5E5E5] rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-neon-green to-electric-cyan" id="qualifiedProgress" style="width:0%"></div>
+                    </div>
                 </div>
-                <div class="text-3xl font-bold text-emerald-600" id="statQualified">—</div>
-            </div>
-            <div class="card stat-card p-5" style="animation-delay:0.2s">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-slate-500 text-sm font-medium">Meetings</span>
-                    <i data-lucide="calendar-check" class="w-5 h-5 text-violet-500"></i>
+                <div class="card-dash p-5 stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[#808080] text-sm font-medium uppercase tracking-wide">Meetings</p>
+                            <p class="text-3xl font-bold mt-1 text-black" id="statMeetings">—</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center">
+                            <i data-lucide="calendar-check" class="w-5 h-5 text-neon-purple"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 h-1 bg-[#E5E5E5] rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-neon-purple to-neon-blue" id="meetingsProgress" style="width:0%"></div>
+                    </div>
                 </div>
-                <div class="text-3xl font-bold text-violet-600" id="statMeetings">—</div>
-            </div>
-            <div class="card stat-card p-5" style="animation-delay:0.3s">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-slate-500 text-sm font-medium">Voicemails</span>
-                    <i data-lucide="voicemail" class="w-5 h-5 text-amber-500"></i>
+                <div class="card-dash p-5 stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[#808080] text-sm font-medium uppercase tracking-wide">Voicemails</p>
+                            <p class="text-3xl font-bold mt-1 text-black" id="statVoicemails">—</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center">
+                            <i data-lucide="voicemail" class="w-5 h-5 text-neon-orange"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 h-1 bg-[#E5E5E5] rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-neon-orange to-neon-pink" id="voicemailsProgress" style="width:0%"></div>
+                    </div>
                 </div>
-                <div class="text-3xl font-bold text-amber-600" id="statVoicemails">—</div>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="card p-5">
-                <h3 class="font-semibold text-slate-700 mb-4 text-sm">Status Distribution</h3>
-                <div class="h-52 flex items-center justify-center">
-                    <canvas id="statusChart"></canvas>
-                </div>
-            </div>
-            <div class="card p-5">
-                <h3 class="font-semibold text-slate-700 mb-4 text-sm">Qualified Breakdown</h3>
-                <div class="h-52 flex items-center justify-center">
-                    <canvas id="qualifiedChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Table -->
-        <div class="card">
-            <!-- Filters -->
-            <div class="p-4 border-b border-slate-100 flex flex-wrap items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
-                    <span class="text-sm font-medium text-slate-600">Filters:</span>
-                </div>
-                <select id="filterStatus" onchange="applyFilters()" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Statuses</option>
-                    <option>Voicemail</option>
-                    <option>Completed</option>
-                    <option>No Answer</option>
-                    <option>In Progress</option>
-                    <option>Failed</option>
-                </select>
-                <select id="filterQualified" onchange="applyFilters()" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Qualified</option>
-                    <option>Yes</option>
-                    <option>No</option>
-                </select>
-                <input id="filterCountry" onkeyup="applyFilters()" placeholder="Country..." class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32">
-                <button onclick="resetFilters()" class="text-sm text-blue-600 hover:text-blue-800 transition ml-auto">Reset</button>
             </div>
 
-            <!-- Table body -->
-            <div>
-                <table class="w-full text-sm text-slate-700 table-fixed">
-                    <thead>
-                        <tr class="border-b border-slate-100">
-                            <th class="px-4 py-3 text-left w-28">Name</th>
-                            <th class="px-4 py-3 text-left w-28">Company</th>
-                            <th class="px-4 py-3 text-left w-28">Phone</th>
-                            <th class="px-4 py-3 text-left w-20">Country</th>
-                            <th class="px-4 py-3 text-left w-24">Status</th>
-                            <th class="px-4 py-3 text-left w-20">Qualified</th>
-                            <th class="px-4 py-3 text-left w-24">Meeting</th>
-                            <th class="px-4 py-3 text-left">Attempt</th>
-                            <th class="px-4 py-3 text-left w-16">Duration</th>
-                            <th class="px-4 py-3 text-left">Summary</th>
-                            <th class="px-4 py-3 text-left w-12">Call</th>
-                            <th class="px-4 py-3 text-left w-32">Date</th>
-                            {% if role == "admin" %}
-                            <th class="px-4 py-3 text-left w-16">Actions</th>
-                            {% endif %}
-                        </tr>
-                    </thead>
-                    <tbody id="callsTableBody">
-                        {% for call in calls %}
-                        <tr class="border-b border-slate-50" data-id="{{ call.id }}"
-                            data-status="{{ call.status or '' }}"
-                            data-qualified="{{ call.qualified or '' }}"
-                            data-country="{{ call.country or '' }}">
-                            <td class="px-4 py-3 font-medium text-slate-800">{{ call.name or '—' }}</td>
-                            <td class="px-4 py-3 text-slate-600">{{ call.company or '—' }}</td>
-                            <td class="px-4 py-3 font-mono text-xs">{{ call.phone or '—' }}</td>
-                            <td class="px-4 py-3">{{ call.country or '—' }}</td>
-                            <td class="px-4 py-3">
-                                {% set s = (call.status or '').lower() %}
-                                {% if s == 'voicemail' %}
-                                    <span class="status-badge status-voicemail">{{ call.status }}</span>
-                                {% elif s == 'completed' %}
-                                    <span class="status-badge status-completed">{{ call.status }}</span>
-                                {% else %}
-                                    <span class="status-badge status-default">{{ call.status or '—' }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-4 py-3">
-                                {% if call.qualified == 'Yes' %}
-                                    <span class="status-badge status-qualified-yes">Yes</span>
-                                {% elif call.qualified == 'No' %}
-                                    <span class="status-badge status-qualified-no">No</span>
-                                {% else %}
-                                    <span class="text-slate-400">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-4 py-3 text-xs text-slate-600">{{ call.meeting or '—' }}</td>
-                            <td class="px-4 py-3 text-center">{{ call.attempt or '—' }}</td>
-                            <td class="px-4 py-3 text-center">{{ call.duration or '—' }}s</td>
-                            <td class="px-4 py-3">
-                                <span class="summary-cell text-xs text-slate-500"
-                                      title="{{ call.summary or '' }}"
-                                      onclick="showSummary('{{ (call.name or '') | replace("'", "\\'") }}', '{{ (call.summary or '') | replace("'", "\\'") | replace('\n', '\\n') }}')">
-                                    {{ call.summary or '—' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                {% if call.call_url %}
-                                    <a href="{{ call.call_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
-                                        <i data-lucide="external-link" class="w-4 h-4"></i>
-                                    </a>
-                                {% else %}
-                                    <span class="text-slate-300">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
-                                {% if call.created_at %}
-                                    {{ call.created_at.strftime('%Y-%m-%d %H:%M') }}
-                                {% else %}
-                                    —
-                                {% endif %}
-                            </td>
-                            {% if role == "admin" %}
-                            <td class="px-4 py-3">
-                                <button onclick="deleteCall({{ call.id }}, this)"
-                                        class="text-red-400 hover:text-red-600 transition"
-                                        title="Delete">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
-                            </td>
-                            {% endif %}
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="13" class="px-4 py-12 text-center text-slate-400">
-                                No calls recorded yet. Waiting for webhook data.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <!-- Charts Row 1: Status + Qualified -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="card-dash p-6">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Call Status Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+                <div class="card-dash p-6">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Qualified Breakdown</h3>
+                    <div class="chart-container">
+                        <canvas id="qualifiedChart"></canvas>
+                    </div>
+                </div>
             </div>
 
-            <div class="px-4 py-3 text-xs text-slate-400 border-t border-slate-100" id="tableFooter">
-                Showing <span id="visibleCount">{{ calls | length }}</span> of {{ calls | length }} records
+            <!-- Charts Row 2: Calls over time (full width) -->
+            <div class="card-dash p-6 mb-6">
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+                    Calls Over Time <span class="text-gray-400 font-normal normal-case">(last 30 days)</span>
+                </h3>
+                <div class="chart-container">
+                    <canvas id="timeChart"></canvas>
+                </div>
             </div>
-        </div>
+
+            <!-- Charts Row 3: By Attempt + By Country -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="card-dash p-6">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Calls by Attempt</h3>
+                    <div class="chart-container" style="height: 220px;">
+                        <canvas id="attemptsChart"></canvas>
+                    </div>
+                </div>
+                <div class="card-dash p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Call Duration Distribution</h3>
+                        <span class="text-xs text-[#A3A3A3]" id="durTotal"></span>
+                    </div>
+                    <div class="space-y-3" id="durBuckets"></div>
+                </div>
+            </div>
+
+            <!-- Filters + Table -->
+            <div class="card-dash">
+                <!-- Filters -->
+                <div class="p-5 border-b border-[#E5E5E5]">
+                    <div class="flex flex-wrap items-end gap-4">
+                        <div>
+                            <label class="text-[#757575] text-xs font-medium block mb-1.5">Call Status</label>
+                            <select id="filterStatus" onchange="applyFilters()" class="input-dash px-4 py-2.5 text-sm min-w-[180px]">
+                                <option value="">All Statuses</option>
+                                <option>Avoid Callback</option>
+                                <option>Hang Up</option>
+                                <option>Voicemail</option>
+                                <option>Not The Right Person</option>
+                                <option>Not Interested</option>
+                                <option>Callback Requested</option>
+                                <option>Meeting Scheduled</option>
+                                <option>Send Information</option>
+                                <option>Remove From Pipeline</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[#757575] text-xs font-medium block mb-1.5">Qualified</label>
+                            <select id="filterQualified" onchange="applyFilters()" class="input-dash px-4 py-2.5 text-sm min-w-[120px]">
+                                <option value="">All</option>
+                                <option>Yes</option>
+                                <option>No</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[#757575] text-xs font-medium block mb-1.5">Country</label>
+                            <input id="filterCountry" onkeyup="applyFilters()" placeholder="Country..."
+                                class="input-dash px-4 py-2.5 text-sm w-32">
+                        </div>
+                        <div class="ml-auto">
+                            <button onclick="resetFilters()" class="btn-primary px-4 py-2.5 text-sm font-medium">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div>
+                    <table class="w-full text-sm text-black table-fixed">
+                        <thead class="border-b border-[#E5E5E5]">
+                            <tr>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-28">Name</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-28">Company</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-28">Phone</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-20">Country</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-24">Status</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-20">Qualified</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-24">Meeting</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-16">Attempt</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-16">Duration</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">Summary</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-12">Call</th>
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-32">Date</th>
+                                {% if role == "admin" %}
+                                <th class="px-4 py-4 text-left text-xs font-bold text-black uppercase tracking-wider w-16">Del</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody id="callsTableBody">
+                            {% for call in calls %}
+                            <tr class="table-row" data-id="{{ call.id }}"
+                                data-status="{{ call.status or '' }}"
+                                data-qualified="{{ call.qualified or '' }}"
+                                data-country="{{ call.country or '' }}"
+                                data-date="{{ call.created_at.strftime('%Y-%m-%d') if call.created_at else '' }}">
+                                <td class="px-4 py-3 font-medium">{{ call.name or '—' }}</td>
+                                <td class="px-4 py-3 text-[#808080]">{{ call.company or '—' }}</td>
+                                <td class="px-4 py-3 font-mono text-xs text-[#808080]">{{ call.phone or '—' }}</td>
+                                <td class="px-4 py-3 text-[#808080]">{{ call.country or '—' }}</td>
+                                <td class="px-4 py-3">
+                                    {% set s = (call.status or '').lower() %}
+                                    {% if s == 'voicemail' %}
+                                        <span class="status-badge status-voicemail">{{ call.status }}</span>
+                                    {% elif s == 'meeting scheduled' %}
+                                        <span class="status-badge status-meeting">{{ call.status }}</span>
+                                    {% elif s == 'callback requested' %}
+                                        <span class="status-badge status-callback">{{ call.status }}</span>
+                                    {% elif s == 'send information' %}
+                                        <span class="status-badge status-info">{{ call.status }}</span>
+                                    {% elif s in ['not interested', 'not the right person', 'avoid callback', 'hang up', 'remove from pipeline'] %}
+                                        <span class="status-badge status-negative">{{ call.status }}</span>
+                                    {% else %}
+                                        <span class="status-badge status-default">{{ call.status or '—' }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if call.qualified == 'Yes' %}
+                                        <span class="status-badge status-qualified-yes">Yes</span>
+                                    {% elif call.qualified == 'No' %}
+                                        <span class="status-badge status-qualified-no">No</span>
+                                    {% else %}
+                                        <span class="text-[#A3A3A3]">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 text-xs text-[#808080]">{{ call.meeting or '—' }}</td>
+                                <td class="px-4 py-3 text-center text-[#808080]">{{ call.attempt or '—' }}</td>
+                                <td class="px-4 py-3 text-center text-[#808080]">{{ call.duration or '—' }}s</td>
+                                <td class="px-4 py-3">
+                                    <span class="summary-cell text-xs text-[#808080]"
+                                          title="{{ call.summary or '' }}"
+                                          onclick="showSummary('{{ (call.name or '') | replace("'", "\\'") }}', '{{ (call.summary or '') | replace("'", "\\'") | replace('\n', '\\n') }}')">
+                                        {{ call.summary or '—' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if call.call_url %}
+                                        <a href="{{ call.call_url }}" target="_blank"
+                                           class="p-2 bg-black hover:bg-gray-900 rounded-lg inline-flex items-center justify-center transition" title="View call">
+                                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-white"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-[#D4D4D4]">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 text-xs text-[#A3A3A3] whitespace-nowrap">
+                                    {% if call.created_at %}{{ call.created_at.strftime('%Y-%m-%d %H:%M') }}{% else %}—{% endif %}
+                                </td>
+                                {% if role == "admin" %}
+                                <td class="px-4 py-3">
+                                    <button onclick="deleteCall({{ call.id }}, this)"
+                                            class="p-2 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-400 rounded-lg transition" title="Delete">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
+                                    </button>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="13" class="px-4 py-16 text-center text-[#A3A3A3]">
+                                    No calls recorded yet. Waiting for webhook data.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-5 py-3 text-xs text-[#A3A3A3] border-t border-[#E5E5E5]">
+                    Showing <span id="visibleCount">{{ calls | length }}</span> of {{ calls | length }} records
+                </div>
+            </div>
 
         </div><!-- end pane-analytics -->
 
         <!-- ===== MONITOR TAB ===== -->
         <div id="pane-monitor" class="hidden">
 
-            <div class="card">
-                <!-- Monitor search bar -->
-                <div class="p-4 border-b border-slate-100 flex flex-wrap items-center gap-3">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                        <span class="text-sm font-medium text-slate-600">Search:</span>
+            <div class="card-dash">
+                <!-- Monitor filters -->
+                <div class="p-5 border-b border-[#E5E5E5]">
+                    <div class="flex flex-wrap items-end gap-4">
+                        <div>
+                            <label class="text-[#757575] text-xs font-medium block mb-1.5">Search</label>
+                            <div class="relative">
+                                <input id="monitorSearch" oninput="filterMonitor()" placeholder="Name, company, phone..."
+                                    class="input-dash pl-9 pr-4 py-2.5 text-sm w-64">
+                                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[#757575] text-xs font-medium block mb-1.5">Call Status</label>
+                            <select id="monitorStatus" onchange="filterMonitor()" class="input-dash px-4 py-2.5 text-sm min-w-[180px]">
+                                <option value="">All Statuses</option>
+                                <option>Avoid Callback</option>
+                                <option>Hang Up</option>
+                                <option>Voicemail</option>
+                                <option>Not The Right Person</option>
+                                <option>Not Interested</option>
+                                <option>Callback Requested</option>
+                                <option>Meeting Scheduled</option>
+                                <option>Send Information</option>
+                                <option>Remove From Pipeline</option>
+                            </select>
+                        </div>
+                        <div class="ml-auto">
+                            <button onclick="resetMonitor()" class="btn-primary px-4 py-2.5 text-sm font-medium">Reset</button>
+                        </div>
                     </div>
-                    <input id="monitorSearch" oninput="filterMonitor()" placeholder="Name, company, phone..."
-                        class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-56">
-                    <select id="monitorStatus" onchange="filterMonitor()" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">All Statuses</option>
-                        <option>Voicemail</option>
-                        <option>Completed</option>
-                        <option>No Answer</option>
-                        <option>In Progress</option>
-                        <option>Failed</option>
-                    </select>
-                    <button onclick="resetMonitor()" class="text-sm text-blue-600 hover:text-blue-800 transition ml-auto">Reset</button>
                 </div>
 
                 <!-- Monitor grouped list -->
-                <div id="monitorList" class="divide-y divide-slate-100"></div>
+                <div id="monitorList" class="divide-y divide-[#E5E5E5]"></div>
 
-                <div class="px-4 py-3 text-xs text-slate-400 border-t border-slate-100">
+                <div class="px-5 py-3 text-xs text-[#A3A3A3] border-t border-[#E5E5E5]">
                     <span id="monitorVisibleCount">0</span> clients · <span id="monitorTotalCalls">0</span> calls
                 </div>
 
-                <!-- Embed calls as JSON for JS grouping -->
+                <!-- Calls JSON for JS grouping -->
                 <script id="monitorData" type="application/json">
                 [{% for call in calls %}{
                     "name": {{ (call.name or '') | tojson }},
                     "company": {{ (call.company or '') | tojson }},
+                    "legal_number": {{ (call.legal_number or '') | tojson }},
                     "phone": {{ (call.phone or '') | tojson }},
                     "country": {{ (call.country or '') | tojson }},
                     "status": {{ (call.status or '') | tojson }},
@@ -336,20 +536,20 @@
     </main>
 
     <!-- Summary Modal -->
-    <div id="summaryModal" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+    <div id="summaryModal" class="fixed inset-0 modal-overlay z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-[#E5E5E5]">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-slate-800" id="summaryModalName">Call Summary</h3>
-                <button onclick="closeSummary()" class="text-slate-400 hover:text-slate-600 transition">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <h3 class="font-bold text-black uppercase tracking-wide text-sm" id="summaryModalName">Call Summary</h3>
+                <button onclick="closeSummary()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                    <i data-lucide="x" class="w-4 h-4 text-[#808080]"></i>
                 </button>
             </div>
-            <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap" id="summaryModalText"></p>
+            <p class="text-[#555] text-sm leading-relaxed whitespace-pre-wrap" id="summaryModalText"></p>
         </div>
     </div>
 
     <!-- Toast container -->
-    <div id="toastContainer"></div>
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
     <script>
         lucide.createIcons();
@@ -359,74 +559,220 @@
             try {
                 const res = await fetch('/api/statistics');
                 const data = await res.json();
+                const total = data.total || 1;
                 animateCount('statTotal', data.total);
                 animateCount('statQualified', data.qualified_yes);
                 animateCount('statMeetings', data.meetings);
                 animateCount('statVoicemails', data.voicemails);
+                document.getElementById('qualifiedProgress').style.width  = (data.qualified_yes / total * 100) + '%';
+                document.getElementById('meetingsProgress').style.width   = (data.meetings / total * 100) + '%';
+                document.getElementById('voicemailsProgress').style.width = (data.voicemails / total * 100) + '%';
                 renderCharts(data);
-            } catch (e) {
-                console.error('Failed to load stats', e);
-            }
+            } catch (e) { console.error('Failed to load stats', e); }
         }
 
         function animateCount(id, target) {
             const el = document.getElementById(id);
             if (!el) return;
-            anime({ targets: { val: 0 }, val: target, round: 1, duration: 800, easing: 'easeOutExpo',
+            anime({ targets: { val: 0 }, val: target, round: 1, duration: 1000, easing: 'easeOutExpo',
                 update: function(anim) { el.textContent = Math.round(anim.animations[0].currentValue); }
             });
         }
 
         // ---- Charts ----
-        let statusChartInst, qualifiedChartInst;
+        Chart.defaults.font.family = "'Inter', 'Arial', sans-serif";
+        Chart.defaults.color = '#6B7280';
+        Chart.defaults.responsive = true;
+        Chart.defaults.maintainAspectRatio = false;
+
+        const STATUS_COLORS = {
+            'voicemail':             '#B3491F',
+            'hang up':               '#B30050',
+            'not interested':        '#EF4444',
+            'not the right person':  '#F97316',
+            'avoid callback':        '#DC2626',
+            'remove from pipeline':  '#9F1239',
+            'callback requested':    '#6366F1',
+            'send information':      '#0099BB',
+            'meeting scheduled':     '#00B35E',
+        };
+        const TOOLTIP_OPTS = {
+            backgroundColor: 'rgba(0,0,0,0.88)',
+            titleColor: '#00A8B3',
+            bodyColor: '#fff',
+            borderColor: '#0099BB',
+            borderWidth: 1,
+            padding: 10,
+        };
+        const GRID_COLOR = '#F3F3F3';
+
+        let statusChartInst, qualifiedChartInst, timeChartInst, attemptsChartInst;
 
         function renderCharts(data) {
+            // ── Status Distribution (horizontal bar) ──
             const statusLabels = Object.keys(data.by_status || {});
             const statusValues = Object.values(data.by_status || {});
-            const palette = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+            const statusColors = statusLabels.map(l => STATUS_COLORS[l.toLowerCase()] || '#A3A3A3');
 
             if (statusChartInst) statusChartInst.destroy();
             statusChartInst = new Chart(document.getElementById('statusChart'), {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
                     labels: statusLabels,
-                    datasets: [{ data: statusValues, backgroundColor: palette, borderWidth: 2, borderColor: '#fff' }]
+                    datasets: [{ data: statusValues, backgroundColor: statusColors, borderRadius: 6, borderSkipped: false }]
                 },
-                options: { responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right', labels: { font: { size: 12 }, padding: 12 } } }
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false }, tooltip: TOOLTIP_OPTS },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: GRID_COLOR } },
+                        y: { grid: { display: false } }
+                    }
                 }
             });
 
+            // ── Qualified Breakdown (bar) ──
             if (qualifiedChartInst) qualifiedChartInst.destroy();
             qualifiedChartInst = new Chart(document.getElementById('qualifiedChart'), {
                 type: 'bar',
                 data: {
-                    labels: ['Qualified Yes', 'Qualified No'],
+                    labels: ['Qualified', 'Not Qualified'],
                     datasets: [{
                         data: [data.qualified_yes, data.qualified_no],
-                        backgroundColor: ['#10b981', '#ef4444'],
+                        backgroundColor: ['#00B35E', '#B30050'],
                         borderRadius: 6,
+                        borderSkipped: false,
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                options: {
+                    plugins: { legend: { display: false }, tooltip: TOOLTIP_OPTS },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: GRID_COLOR } },
+                        x: { grid: { display: false } }
+                    }
                 }
             });
+
+            // ── Calls Over Time (line) ──
+            const timeRows = data.calls_over_time || [];
+            if (timeChartInst) timeChartInst.destroy();
+            timeChartInst = new Chart(document.getElementById('timeChart'), {
+                type: 'line',
+                data: {
+                    labels: timeRows.map(r => r.date),
+                    datasets: [{
+                        label: 'Calls',
+                        data: timeRows.map(r => r.count),
+                        borderColor: '#6366F1',
+                        backgroundColor: 'rgba(99,102,241,0.08)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#6366F1',
+                        tension: 0.4,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false }, tooltip: TOOLTIP_OPTS },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: GRID_COLOR } },
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }
+                    }
+                }
+            });
+
+            // ── Calls by Attempt (bar) ──
+            const attemptLabels = Object.keys(data.by_attempt || {}).map(a => `Attempt ${a}`);
+            const attemptValues = Object.values(data.by_attempt || {});
+            if (attemptsChartInst) attemptsChartInst.destroy();
+            attemptsChartInst = new Chart(document.getElementById('attemptsChart'), {
+                type: 'bar',
+                data: {
+                    labels: attemptLabels,
+                    datasets: [{
+                        data: attemptValues,
+                        backgroundColor: '#14B8A6',
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false }, tooltip: TOOLTIP_OPTS },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: GRID_COLOR } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // ── Duration Distribution ──
+            const durDist  = data.duration_distribution || {};
+            const durTotal = Object.values(durDist).reduce((a, b) => a + b, 0);
+            const durColors = {
+                '0-30s':  '#EF4444',
+                '30s-1m': '#F97316',
+                '1-2m':   '#F59E0B',
+                '2-3m':   '#14B8A6',
+                '3-5m':   '#6366F1',
+                '5m+':    '#00B35E',
+            };
+            document.getElementById('durTotal').textContent = durTotal + ' calls';
+            const bucketsEl = document.getElementById('durBuckets');
+            bucketsEl.innerHTML = Object.entries(durDist).map(([label, count]) => {
+                const pct = durTotal > 0 ? Math.round(count / durTotal * 100) : 0;
+                const color = durColors[label] || '#A3A3A3';
+                return `
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-black">${label}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-black">${count}</span>
+                            <span class="text-xs text-[#A3A3A3] w-8 text-right">${pct}%</span>
+                        </div>
+                    </div>
+                    <div class="h-1.5 bg-[#F3F3F3] rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700" style="width:${pct}%; background:${color}"></div>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         // ---- Filters ----
+        function getWeekBounds(weekValue) {
+            // weekValue: "2026-W12"
+            if (!weekValue) return null;
+            const [yearStr, weekStr] = weekValue.split('-W');
+            const year = parseInt(yearStr), week = parseInt(weekStr);
+            // ISO week: week 1 is the week containing the first Thursday
+            const jan4 = new Date(year, 0, 4);
+            const startOfWeek1 = new Date(jan4);
+            startOfWeek1.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+            const monday = new Date(startOfWeek1);
+            monday.setDate(startOfWeek1.getDate() + (week - 1) * 7);
+            const friday = new Date(monday);
+            friday.setDate(monday.getDate() + 4);
+            return { monday, friday };
+        }
+
         function applyFilters() {
-            const status = document.getElementById('filterStatus').value.toLowerCase();
+            const status    = document.getElementById('filterStatus').value.toLowerCase();
             const qualified = document.getElementById('filterQualified').value.toLowerCase();
-            const country = document.getElementById('filterCountry').value.toLowerCase();
+            const country   = document.getElementById('filterCountry').value.toLowerCase();
+            const weekVal   = document.getElementById('filterWeek').value;
+            const bounds    = getWeekBounds(weekVal);
+
             const rows = document.querySelectorAll('#callsTableBody tr[data-id]');
             let visible = 0;
             rows.forEach(row => {
-                const rs = (row.dataset.status || '').toLowerCase();
-                const rq = (row.dataset.qualified || '').toLowerCase();
-                const rc = (row.dataset.country || '').toLowerCase();
-                const show = (!status || rs === status) && (!qualified || rq === qualified) && (!country || rc.includes(country));
+                let weekOk = true;
+                if (bounds && row.dataset.date) {
+                    const d = new Date(row.dataset.date);
+                    weekOk = d >= bounds.monday && d <= bounds.friday;
+                }
+                const show = (!status    || (row.dataset.status    || '').toLowerCase() === status)
+                          && (!qualified || (row.dataset.qualified || '').toLowerCase() === qualified)
+                          && (!country   || (row.dataset.country   || '').toLowerCase().includes(country))
+                          && weekOk;
                 row.style.display = show ? '' : 'none';
                 if (show) visible++;
             });
@@ -434,9 +780,10 @@
         }
 
         function resetFilters() {
-            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterStatus').value   = '';
             document.getElementById('filterQualified').value = '';
-            document.getElementById('filterCountry').value = '';
+            document.getElementById('filterCountry').value  = '';
+            document.getElementById('filterWeek').value     = '';
             applyFilters();
         }
 
@@ -445,16 +792,9 @@
             if (!confirm('Delete this call record?')) return;
             try {
                 const res = await fetch(`/api/calls/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    btn.closest('tr').remove();
-                    showToast('Record deleted', 'success');
-                    loadStats();
-                } else {
-                    showToast('Delete failed', 'error');
-                }
-            } catch (e) {
-                showToast('Delete failed', 'error');
-            }
+                if (res.ok) { btn.closest('tr').remove(); showToast('Record deleted', 'success'); loadStats(); }
+                else showToast('Delete failed', 'error');
+            } catch (e) { showToast('Delete failed', 'error'); }
         }
 
         // ---- Launch Batch ----
@@ -465,14 +805,9 @@
             try {
                 const res = await fetch('/api/launch-batch', { method: 'POST' });
                 const data = await res.json();
-                if (data.success) {
-                    showToast('Batch launched successfully!', 'success');
-                } else {
-                    showToast('Batch launch failed: ' + data.message, 'error');
-                }
-            } catch (e) {
-                showToast('Batch launch failed', 'error');
-            } finally {
+                showToast(data.success ? 'Batch launched!' : 'Launch failed: ' + data.message, data.success ? 'success' : 'error');
+            } catch (e) { showToast('Batch launch failed', 'error'); }
+            finally {
                 btn.disabled = false;
                 btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> Launch Batch';
                 lucide.createIcons();
@@ -485,9 +820,7 @@
             document.getElementById('summaryModalText').textContent = text || 'No summary available.';
             document.getElementById('summaryModal').classList.add('open');
         }
-        function closeSummary() {
-            document.getElementById('summaryModal').classList.remove('open');
-        }
+        function closeSummary() { document.getElementById('summaryModal').classList.remove('open'); }
 
         // ---- Toast ----
         function showToast(message, type) {
@@ -505,11 +838,11 @@
                 document.getElementById('pane-' + t).classList.toggle('hidden', t !== tab);
                 const btn = document.getElementById('tab-' + t);
                 if (t === tab) {
-                    btn.classList.add('border-blue-600', 'text-blue-700');
-                    btn.classList.remove('border-transparent', 'text-slate-500');
+                    btn.classList.add('border-black', 'text-black');
+                    btn.classList.remove('border-transparent', 'text-[#808080]');
                 } else {
-                    btn.classList.remove('border-blue-600', 'text-blue-700');
-                    btn.classList.add('border-transparent', 'text-slate-500');
+                    btn.classList.remove('border-black', 'text-black');
+                    btn.classList.add('border-transparent', 'text-[#808080]');
                 }
             });
             lucide.createIcons();
@@ -521,81 +854,81 @@
         function statusBadge(status) {
             const s = (status || '').toLowerCase();
             let cls = 'status-default';
-            if (s === 'voicemail') cls = 'status-voicemail';
-            else if (s === 'completed') cls = 'status-completed';
-            return status ? `<span class="status-badge ${cls}">${status}</span>` : '<span class="text-slate-400">—</span>';
+            if (s === 'voicemail')           cls = 'status-voicemail';
+            else if (s === 'meeting scheduled') cls = 'status-meeting';
+            else if (s === 'callback requested') cls = 'status-callback';
+            else if (s === 'send information')   cls = 'status-info';
+            else if (['not interested','not the right person','avoid callback','hang up','remove from pipeline'].includes(s)) cls = 'status-negative';
+            return status ? `<span class="status-badge ${cls}">${status}</span>` : '<span class="text-[#A3A3A3]">—</span>';
         }
 
         function qualifiedBadge(q) {
             if (q === 'Yes') return '<span class="status-badge status-qualified-yes">Yes</span>';
-            if (q === 'No') return '<span class="status-badge status-qualified-no">No</span>';
-            return '<span class="text-slate-400">—</span>';
+            if (q === 'No')  return '<span class="status-badge status-qualified-no">No</span>';
+            return '<span class="text-[#A3A3A3]">—</span>';
         }
 
         function renderMonitor(calls) {
             const list = document.getElementById('monitorList');
             if (!calls.length) {
-                list.innerHTML = '<div class="px-4 py-12 text-center text-slate-400">No calls recorded yet.</div>';
+                list.innerHTML = '<div class="px-5 py-16 text-center text-[#A3A3A3]">No calls recorded yet.</div>';
                 document.getElementById('monitorVisibleCount').textContent = 0;
                 document.getElementById('monitorTotalCalls').textContent = 0;
                 return;
             }
 
-            // Group by name+phone
             const groups = {};
             calls.forEach(c => {
-                const key = (c.name || '—') + '||' + (c.phone || '');
-                if (!groups[key]) groups[key] = { name: c.name, company: c.company, phone: c.phone, country: c.country, calls: [] };
+                const key = (c.company || c.name || '—') + '||' + (c.phone || '');
+                if (!groups[key]) groups[key] = { name: c.name, company: c.company, legal_number: c.legal_number, phone: c.phone, country: c.country, calls: [] };
                 groups[key].calls.push(c);
             });
 
             let html = '';
             Object.values(groups).forEach((g, gi) => {
                 const latest = g.calls[0];
-                const count = g.calls.length;
+                const count  = g.calls.length;
                 html += `
-                <div class="monitor-group" data-group="${gi}">
-                    <!-- Group header -->
-                    <div class="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-slate-50 transition select-none"
+                <div class="monitor-group">
+                    <div class="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-[#F7F7F7] transition select-none"
                          onclick="toggleGroup(${gi})">
-                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 transition-transform group-chevron" id="chevron-${gi}"></i>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-[#A3A3A3] transition-transform flex-shrink-0" id="chevron-${gi}" style="transition: transform 0.2s"></i>
                         <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
                             <div>
-                                <div class="font-semibold text-slate-800 text-sm">${g.name || '—'}</div>
-                                <div class="text-xs text-slate-500">${g.company || '—'}</div>
+                                <div class="font-semibold text-black text-sm">${g.company || '—'}</div>
+                                <div class="text-xs text-[#808080]">${g.legal_number ? g.legal_number : (g.name || '—')}</div>
                             </div>
-                            <div class="font-mono text-xs text-slate-600">${g.phone || '—'}</div>
-                            <div class="text-xs text-slate-500">${g.country || '—'}</div>
+                            <div class="font-mono text-xs text-[#808080]">${g.phone || '—'}</div>
+                            <div class="text-xs text-[#808080]">${g.country || '—'}</div>
                             <div class="flex items-center gap-2">
                                 ${statusBadge(latest.status)}
-                                <span class="text-xs text-slate-400">${count} call${count > 1 ? 's' : ''}</span>
+                                <span class="text-xs text-[#A3A3A3]">${count} call${count > 1 ? 's' : ''}</span>
                             </div>
                         </div>
                     </div>
-                    <!-- Child rows -->
-                    <div id="group-rows-${gi}" class="hidden bg-slate-50 border-t border-slate-100">
-                        <table class="w-full text-sm text-slate-700">
+                    <div id="group-rows-${gi}" class="hidden bg-[#F7F7F7] border-t border-[#E5E5E5]">
+                        <table class="w-full text-sm">
                             <thead>
-                                <tr class="border-b border-slate-200">
-                                    <th class="pl-12 pr-4 py-2 text-left">Status</th>
-                                    <th class="px-4 py-2 text-left">Qualified</th>
-                                    <th class="px-4 py-2 text-left">Attempt</th>
-                                    <th class="px-4 py-2 text-left">Duration</th>
-                                    <th class="px-4 py-2 text-left">Date</th>
-                                    <th class="px-4 py-2 text-left">Recording</th>
+                                <tr class="border-b border-[#E5E5E5]">
+                                    <th class="pl-14 pr-4 py-2.5 text-left text-xs font-bold text-black uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-bold text-black uppercase tracking-wider">Qualified</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-bold text-black uppercase tracking-wider">Attempt</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-bold text-black uppercase tracking-wider">Duration</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-bold text-black uppercase tracking-wider">Date</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-bold text-black uppercase tracking-wider">Recording</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${g.calls.map(c => `
-                                <tr class="border-b border-slate-100 last:border-0">
-                                    <td class="pl-12 pr-4 py-2">${statusBadge(c.status)}</td>
-                                    <td class="px-4 py-2">${qualifiedBadge(c.qualified)}</td>
-                                    <td class="px-4 py-2 text-center">${c.attempt || '—'}</td>
-                                    <td class="px-4 py-2 text-center">${c.duration && c.duration !== '0' ? c.duration + 's' : '<span class="text-slate-400">—</span>'}</td>
-                                    <td class="px-4 py-2 text-xs text-slate-500 whitespace-nowrap">${c.created_at || '—'}</td>
-                                    <td class="px-4 py-2">${c.call_url
-                                        ? `<a href="${c.call_url}" target="_blank" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"><svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> View</a>`
-                                        : '<span class="text-slate-300 text-xs">No recording</span>'
+                                <tr class="table-row">
+                                    <td class="pl-14 pr-4 py-3">${statusBadge(c.status)}</td>
+                                    <td class="px-4 py-3">${qualifiedBadge(c.qualified)}</td>
+                                    <td class="px-4 py-3 text-center text-[#808080]">${c.attempt || '—'}</td>
+                                    <td class="px-4 py-3 text-center text-[#808080]">${c.duration && c.duration !== '0' ? c.duration + 's' : '<span class="text-[#A3A3A3]">—</span>'}</td>
+                                    <td class="px-4 py-3 text-xs text-[#A3A3A3] whitespace-nowrap">${c.created_at || '—'}</td>
+                                    <td class="px-4 py-3">${c.call_url
+                                        ? `<a href="${c.call_url}" target="_blank" class="inline-flex items-center gap-1.5 bg-black hover:bg-gray-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"><svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> View</a>`
+                                        : '<span class="text-[#D4D4D4] text-xs">No recording</span>'
                                     }</td>
                                 </tr>`).join('')}
                             </tbody>
@@ -611,37 +944,62 @@
         }
 
         function toggleGroup(gi) {
-            const rows = document.getElementById('group-rows-' + gi);
+            const rows    = document.getElementById('group-rows-' + gi);
             const chevron = document.getElementById('chevron-' + gi);
-            const open = !rows.classList.contains('hidden');
+            const open    = !rows.classList.contains('hidden');
             rows.classList.toggle('hidden', open);
             chevron.style.transform = open ? '' : 'rotate(90deg)';
         }
 
-        // ---- Monitor Filter ----
         function filterMonitor() {
-            const q = (document.getElementById('monitorSearch').value || '').toLowerCase();
-            const st = (document.getElementById('monitorStatus').value || '').toLowerCase();
+            const q      = (document.getElementById('monitorSearch').value || '').toLowerCase();
+            const st     = (document.getElementById('monitorStatus').value || '').toLowerCase();
+            const weekVal = document.getElementById('filterWeek').value;
+            const bounds  = getWeekBounds(weekVal);
             const filtered = allMonitorCalls.filter(c => {
-                const matchQ = !q || (c.name||'').toLowerCase().includes(q) || (c.company||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q);
+                const matchQ  = !q  || (c.name||'').toLowerCase().includes(q) || (c.company||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q);
                 const matchSt = !st || (c.status||'').toLowerCase() === st;
-                return matchQ && matchSt;
+                let weekOk = true;
+                if (bounds && c.created_at) {
+                    const d = new Date(c.created_at);
+                    weekOk = d >= bounds.monday && d <= bounds.friday;
+                }
+                return matchQ && matchSt && weekOk;
             });
             renderMonitor(filtered);
         }
 
         function resetMonitor() {
-            document.getElementById('monitorSearch').value = '';
-            document.getElementById('monitorStatus').value = '';
+            document.getElementById('monitorSearch').value  = '';
+            document.getElementById('monitorStatus').value  = '';
             renderMonitor(allMonitorCalls);
+        }
+
+        function getCurrentWeekValue() {
+            const now = new Date();
+            // ISO week number
+            const tmp = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+            tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+            const week = Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+            return `${tmp.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+        }
+
+        function clearWeekFilter() {
+            document.getElementById('filterWeek').value = '';
+            applyFilters();
+            filterMonitor();
         }
 
         // ---- Init ----
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             loadStats();
+            // Set current week by default
+            document.getElementById('filterWeek').value = getCurrentWeekValue();
             allMonitorCalls = JSON.parse(document.getElementById('monitorData').textContent);
-            renderMonitor(allMonitorCalls);
+            applyFilters();
+            filterMonitor();
         });
     </script>
 </body>

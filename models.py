@@ -16,6 +16,7 @@ class InfinitCall(Base):
     duration = Column(String(20))
     name = Column(String(255))
     company = Column(String(255))
+    legal_number = Column(String(100))
     call_url = Column(Text)
     country = Column(String(100))
     created_at = Column(DateTime, default=datetime.utcnow)

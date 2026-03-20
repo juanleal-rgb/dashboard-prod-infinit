@@ -130,6 +130,7 @@ async def receive_webhook(payload: WebhookPayload, db: Session = Depends(get_db)
         duration=payload.duration or "",
         name=payload.name or "",
         company=payload.company or "",
+        legal_number=payload.legal_number or "",
         call_url=payload.call_url or "",
         country=payload.country or "",
         created_at=datetime.utcnow(),
@@ -208,16 +209,45 @@ async def get_statistics(request: Request, db: Session = Depends(get_db)):
     total = db.query(InfinitCall).count()
     qualified_yes = db.query(InfinitCall).filter(InfinitCall.qualified == "Yes").count()
     qualified_no = db.query(InfinitCall).filter(InfinitCall.qualified == "No").count()
-    meetings = db.query(InfinitCall).filter(InfinitCall.status.ilike("%meeting%")).count()
-    voicemails = db.query(InfinitCall).filter(InfinitCall.status == "Voicemail").count()
+    meetings = db.query(InfinitCall).filter(InfinitCall.status.ilike("meeting scheduled")).count()
+    voicemails = db.query(InfinitCall).filter(InfinitCall.status.ilike("voicemail")).count()
 
-    # Status breakdown
-    from sqlalchemy import func
+    from sqlalchemy import func, cast, Date
+
     status_counts = db.query(InfinitCall.status, func.count(InfinitCall.id)).group_by(InfinitCall.status).all()
     by_status = {s: c for s, c in status_counts if s}
 
     country_counts = db.query(InfinitCall.country, func.count(InfinitCall.id)).group_by(InfinitCall.country).all()
     by_country = {c: n for c, n in country_counts if c}
+
+    attempt_counts = db.query(InfinitCall.attempt, func.count(InfinitCall.id)).group_by(InfinitCall.attempt).all()
+    by_attempt = {a: c for a, c in sorted(attempt_counts, key=lambda x: int(x[0]) if x[0] and x[0].isdigit() else 99) if a}
+
+    # Duration distribution buckets
+    all_durations = db.query(InfinitCall.duration).all()
+    dur_buckets = {"0-30s": 0, "30s-1m": 0, "1-2m": 0, "2-3m": 0, "3-5m": 0, "5m+": 0}
+    for (d,) in all_durations:
+        try:
+            secs = float(d or 0)
+        except (ValueError, TypeError):
+            secs = 0
+        if secs < 30:       dur_buckets["0-30s"]  += 1
+        elif secs < 60:     dur_buckets["30s-1m"] += 1
+        elif secs < 120:    dur_buckets["1-2m"]   += 1
+        elif secs < 180:    dur_buckets["2-3m"]   += 1
+        elif secs < 300:    dur_buckets["3-5m"]   += 1
+        else:               dur_buckets["5m+"]    += 1
+
+    from datetime import date, timedelta
+    thirty_days_ago = date.today() - timedelta(days=29)
+    time_counts = (
+        db.query(cast(InfinitCall.created_at, Date), func.count(InfinitCall.id))
+        .filter(InfinitCall.created_at >= thirty_days_ago)
+        .group_by(cast(InfinitCall.created_at, Date))
+        .order_by(cast(InfinitCall.created_at, Date))
+        .all()
+    )
+    calls_over_time = [{"date": str(d), "count": c} for d, c in time_counts]
 
     return {
         "total": total,
@@ -227,6 +257,9 @@ async def get_statistics(request: Request, db: Session = Depends(get_db)):
         "voicemails": voicemails,
         "by_status": by_status,
         "by_country": by_country,
+        "by_attempt": by_attempt,
+        "calls_over_time": calls_over_time,
+        "duration_distribution": dur_buckets,
     }
 
 

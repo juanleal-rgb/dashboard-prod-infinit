@@ -13,6 +13,7 @@ class WebhookPayload(BaseModel):
     duration: Optional[str] = ""
     name: Optional[str] = ""
     company: Optional[str] = ""
+    legal_number: Optional[str] = ""
     call_url: Optional[str] = ""
     country: Optional[str] = ""
 
@@ -28,6 +29,7 @@ class CallResponse(BaseModel):
     duration: Optional[str] = ""
     name: Optional[str] = ""
     company: Optional[str] = ""
+    legal_number: Optional[str] = ""
     call_url: Optional[str] = ""
     country: Optional[str] = ""
     created_at: Optional[datetime] = None
